@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>3 Lane Head-On Car Game</title>
+<style>
+    body { margin:0; background:#222; overflow:hidden; }
+    canvas { background:#444; display:block; margin:0 auto; }
+    #gameOver {
+        position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+        font-size:48px; color:white; display:none; font-family:sans-serif;
+    }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="400" height="600"></canvas>
+<div id="gameOver">GAME OVER</div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const lanes = [66, 166, 266]; // x positions for 3 lanes
+let player1 = { x: lanes[0], y: 500, color: 'red', lane: 0 };
+let player2 = { x: lanes[2], y: 50, color: 'blue', lane: 2 };
+
+let speed1 = 2, speed2 = 2;
+let gameOver = false;
+
+function drawRoad() {
+    ctx.fillStyle = "#333";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    for (let i=1; i<3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(lanes[i]-33, 0);
+        ctx.lineTo(lanes[i]-33, canvas.height);
+        ctx.stroke();
+    }
+}
+
+function drawCar(car) {
+    ctx.fillStyle = car.color;
+    ctx.fillRect(car.x-25, car.y-40, 50, 80);
+}
+
+function update() {
+    if (gameOver) return;
+    player1.y -= speed1;
+    player2.y += speed2;
+
+    // wrap around
+    if (player1.y < -80) player1.y = canvas.height;
+    if (player2.y > canvas.height+80) player2.y = -80;
+
+    // collision
+    if (player1.lane === player2.lane &&
+        Math.abs(player1.y - player2.y) < 80) {
+        document.getElementById('gameOver').style.display = 'block';
+        gameOver = true;
+    }
+}
+
+function draw() {
+    drawRoad();
+    drawCar(player1);
+    drawCar(player2);
+}
+
+function loop() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+loop();
+
+// controls
+document.addEventListener('keydown', e => {
+    if (e.key === 'a') { player1.lane = Math.max(0, player1.lane - 1); player1.x = lanes[player1.lane]; }
+    if (e.key === 'd') { player1.lane = Math.min(2, player1.lane + 1); player1.x = lanes[player1.lane]; }
+    if (e.key === 'ArrowLeft') { player2.lane = Math.max(0, player2.lane - 1); player2.x = lanes[player2.lane]; }
+    if (e.key === 'ArrowRight') { player2.lane = Math.min(2, player2.lane + 1); player2.x = lanes[player2.lane]; }
+
+    if (e.key === 'w') speed1++;
+    if (e.key === 's') speed1 = Math.max(1, speed1-1);
+    if (e.key === 'ArrowUp') speed2++;
+    if (e.key === 'ArrowDown') speed2 = Math.max(1, speed2-1);
+});
+</script>
+</body>
+</html>
